@@ -1,0 +1,9 @@
+pandas
+numpy
+scikit-learn
+xgboost
+pyyaml
+streamlit
+sqlalchemy
+mysql-connector-python
+openpyxl

@@ -1,0 +1,4 @@
+days: 1000
+forecast_horizon: 120
+num_skus: 10
+random_seed: 42
