@@ -1,38 +1,61 @@
-# Time-series Forecasting Project (Pharma/Chemical example)
+# Time-Series Forecasting
 
-This repository contains a ready-to-run example of a time-series forecasting pipeline using synthetic data, XGBoost-based forecasting, and a Streamlit app to run batch forecasts and export CSV/Excel files for Power BI or MySQL ingestion.
+**Pharma / Chemical example**
 
-**Contents**
-- `data_generator.py` — synthesize SKU-level daily timeseries (trend, seasonality, noise, promotions).
-- `feature_engineering.py` — create lag & rolling features for XGBoost.
-- `model_train.py` — trains per-SKU XGBoost models and saves forecasts.
-- `batch_forecast.py` — runs forecasts for all SKUs and outputs (1) SKU-level daily forecasts CSV and (2) aggregated monthly CSV.
-- `streamlit_app.py` — a Streamlit UI to run batch forecasts and download produced CSVs; optional MySQL upload.
-- `export_mysql.py` — example script to load CSVs into a MySQL table using SQLAlchemy.
-- `powerbi_instructions.md` — step-by-step to import CSV/Excel and MySQL in Power BI, suggested visuals & Power Query snippets.
-- `requirements.txt` — required Python packages.
-- `example_config.yaml` — adjustable parameters (num_skus, days, forecast_horizon, output sizes).
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org)
+[![Streamlit](https://img.shields.io/badge/streamlit-ready-orange)](https://streamlit.io)
 
-Default settings generate ~50 SKUs × 3 years daily data (~54k rows). Change `example_config.yaml` for larger outputs (increase `num_skus` or `days`).
+---
 
+## Overview
 
-# Quick start
+A compact, end-to-end example pipeline for synthetic time-series generation, model training, batch forecasting, and Power BI visualization. It’s tailored for SKU-level demand forecasting (pharma/chemical), but is easily adaptable to other domains.
 
-1. Create a Python environment and install requirements:
+**What you get**
+
+* Synthetic historical SKU-level daily data
+* Model training and batch forecast scripts
+* Outputs exported as CSVs (and example MySQL upload)
+* Power BI instructions and Power Query snippets for fast visualization
+
+---
+
+## Repo structure
+
+```
+├── data/                       # raw and synthetic input files
+│   └── synthetic_sku_daily.csv
+├── outputs/                    # generated forecasts and aggregates
+│   └── sku_forecasts_daily.csv
+├── streamlit_app.py            # interactive UI to run the pipeline
+├── data_generator.py           # generate synthetic time-series data
+├── model_train.py              # train forecasting model(s)
+├── batch_forecast.py           # run batch forecasts and write outputs
+├── export_mysql.py             # example: push CSV outputs into MySQL (SQLAlchemy)
+├── powerbi_instructions.md     # detailed Power BI steps & Power Query snippets
+├── example_config.yaml         # config: num_skus, days, horizon, output sizes
+└── requirements.txt
+```
+
+---
+
+## Quick start
+
+**1. Create and activate a Python environment**
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # or .venv\Scripts\activate on Windows
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-2. Run the Streamlit app:
+**2. Run the Streamlit app (recommended for interactive use)**
 
 ```bash
 streamlit run streamlit_app.py
 ```
 
-3. Or run the pipeline directly:
+**3. Or run the pipeline scripts directly**
 
 ```bash
 python data_generator.py
@@ -40,52 +63,100 @@ python model_train.py
 python batch_forecast.py
 ```
 
-
-# Power BI - Step by step using the generated outputs
-
-## Option A: Import CSV/Excel
-1. Open Power BI Desktop -> Get Data -> Text/CSV. Choose `outputs/sku_forecasts_daily.csv`.
-2. In Power Query: change `date` column type to Date.
-3. Create relationships if you also import `data/synthetic_sku_daily.csv` (join by `sku` + `date`).
-4. Suggested visuals:
-   - Line chart: `date` on X, `forecast` on Y, small multiples by `sku` (or use slicer to choose SKU)
-   - Matrix: `sku` rows, `month` columns, aggregated sum of forecast
-   - Card + KPI: total forecast this month, comparison vs previous month
-5. Use Power Query to create `month` column: `Date.StartOfMonth([date])` or M: `Date.StartOfMonth([date])`.
-
-## Option B: Connect to MySQL
-1. Get Data -> MySQL database. Provide host, database, and credentials.
-2. Choose the `sku_forecasts_daily` and `agg_monthly_forecast` tables.
-3. Build visuals as above. Use DirectQuery if you want near-real-time (be mindful of performance).
-
-## Power Query tips / transformations
-- To pivot monthly data for a heatmap: Group By `sku` and `month` -> Sum `forecast` -> Pivot `month`.
-- For large row counts, prefer aggregated tables (monthly or weekly) and push-heavy operations to the database.
-
-## Suggested PBIX layout
-- Page 1: Overview (totals, KPI, trend line)
-- Page 2: SKU Explorer (slicer for SKU, line chart with actual vs forecast)
-- Page 3: Plant / Category analysis (bar charts)
-
-
-Outputs appear in `outputs/` (CSV files). Use Power BI to import those CSVs or upload them to MySQL via `export_mysql.py`.
-<p align="center">
-  <img src="Test3.JPG" width="1000">
-</p
-
-
-<p align="center">
-  <img src="Test4.JPG" width="1000">
-</p
-
-
-<p align="center">
-  <img src="Test2.JPG" width="1000">
-</p
-
-
-<p align="center">
-  <img src="Test1.JPG" width="1000">
-</p
+By default the generator creates ~**50 SKUs × 3 years** daily (~54,000 rows). Adjust `example_config.yaml` to scale `num_skus`, `days`, and `forecast_horizon`.
 
 ---
+
+## Configuration
+
+Edit `example_config.yaml` to change:
+
+* `num_skus` — number of unique SKUs to simulate
+* `days` — historical days to generate
+* `forecast_horizon` — days ahead to forecast
+* `output` — filenames and aggregation settings
+
+---
+
+## Outputs
+
+All CSV outputs land in the `outputs/` folder. Key files:
+
+* `outputs/sku_forecasts_daily.csv` — daily forecast per SKU
+* `outputs/agg_monthly_forecast.csv` — monthly aggregated forecasts (example)
+
+---
+
+## Power BI — usage guide (quick)
+
+Two options: import CSVs or connect to MySQL.
+
+### Option A — Import CSV / Excel
+
+1. Power BI Desktop → **Get Data → Text/CSV** → `outputs/sku_forecasts_daily.csv`
+2. In Power Query, set `date` column type to **Date**.
+3. If using `data/synthetic_sku_daily.csv`, create relationship by `sku` + `date`.
+4. Suggested visuals:
+
+   * **Line chart**: X = `date`, Y = `forecast`, split by `sku` (small multiples or slicer)
+   * **Matrix**: rows `sku`, columns `month`, values = SUM(`forecast`)
+   * **Card / KPI**: monthly totals, YoY or MoM comparisons
+5. Create `month` column in Power Query: `Date.StartOfMonth([date])`
+
+### Option B — Connect to MySQL
+
+1. Get Data → **MySQL database** (supply host, db, credentials).
+2. Select tables: `sku_forecasts_daily`, `agg_monthly_forecast`.
+3. Consider **DirectQuery** for near-real-time, but be mindful of performance.
+
+### Power Query tips
+
+* Pivot monthly data for heatmaps: Group by `sku` & `month` → Sum(`forecast`) → Pivot `month`.
+* For very large datasets prefer aggregated tables (weekly/monthly) and push transformation to DB.
+
+---
+
+## Export to MySQL
+
+See `export_mysql.py` for an example showing how to load CSVs into a MySQL table using SQLAlchemy. It’s a minimal example — adapt schema, batching, and credentials for production.
+
+---
+
+## Suggested Power BI layout
+
+* **Page 1:** Overview — KPIs, totals, trend
+* **Page 2:** SKU Explorer — slicer for SKU, actual vs forecast
+* **Page 3:** Plant / Category analysis — breakdowns and bar charts
+
+---
+
+## Screenshots
+
+Include the repository images in `docs/` or keep them at the repo root. Example placeholders:
+
+<p align="center"><img src="Test3.JPG" width="1000"></p>
+<p align="center"><img src="Test4.JPG" width="1000"></p>
+<p align="center"><img src="Test2.JPG" width="1000"></p>
+<p align="center"><img src="Test1.JPG" width="1000"></p>
+
+---
+
+## Contributing
+
+Contributions welcome. Please open an issue for feature requests or bug reports, and follow these steps:
+
+1. Fork the repo
+2. Create a feature branch
+3. Submit a pull request with a clear description
+
+---
+
+## License
+
+This project is provided as-is for demo and learning purposes. 
+---
+
+## Author
+
+**Shine Jose — M.Sc. Informatik (Data Science)**
+
